@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - BookRentv3</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f3f4f6;
+            --sidebar-bg: #111827;
+            --sidebar-hover: #1f2937;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --card-bg: #ffffff;
+            --border-color: #e5e7eb;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border-bottom: 1px solid #374151;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-header i {
+            color: #818cf8;
+        }
+
+        .nav-links {
+            list-style: none;
+            padding: 20px 0;
+            flex: 1;
+        }
+
+        .nav-item {
+            padding: 0 16px;
+            margin-bottom: 8px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #d1d5db;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background-color: var(--sidebar-hover);
+            color: white;
+        }
+        
+        .nav-link.active {
+            background-color: var(--primary);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top Header */
+        .header {
+            height: 70px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: var(--bg-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            width: 300px;
+        }
+
+        .search-bar input {
+            border: none;
+            background: none;
+            outline: none;
+            margin-left: 8px;
+            width: 100%;
+            color: var(--text-main);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* Dashboard Content */
+        .content-area {
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background-color: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-icon.blue { background-color: #dbeafe; color: #2563eb; }
+        .stat-icon.green { background-color: #dcfce7; color: #16a34a; }
+        .stat-icon.purple { background-color: #f3e8ff; color: #9333ea; }
+        .stat-icon.orange { background-color: #ffedd5; color: #ea580c; }
+
+        .stat-info h3 {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .stat-info p {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* Table Section */
+        .table-section {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        tbody tr {
+            transition: background-color 0.15s ease;
+        }
+
+        tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .status {
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status.active { background-color: #dcfce7; color: #16a34a; }
+        .status.returned { background-color: #f3f4f6; color: #4b5563; }
+        .status.late { background-color: #fee2e2; color: #dc2626; }
+
+        .admin-section { display: none; }
+        .admin-section.active { display: block; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-book-open"></i>
+            BookRentv3
+        </div>
+        <ul class="nav-links">
+            <li class="nav-item"><a href="#" class="nav-link active" data-target="dashboard"><i class="fas fa-home"></i> แดชบอร์ด</a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-target="books"><i class="fas fa-book"></i> จัดการหนังสือ</a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-target="users"><i class="fas fa-users"></i> จัดการสมาชิก</a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-target="rentals"><i class="fas fa-exchange-alt"></i> การยืม-คืน</a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-target="reports"><i class="fas fa-chart-bar"></i> รายงานสถิติ</a></li>
+        </ul>
+        <div style="padding: 20px; border-top: 1px solid #374151;">
+            <a href="#" id="adminLogoutBtn" class="nav-link" style="color: #ef4444;"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="search-bar">
+                <i class="fas fa-search" style="color: #9ca3af;"></i>
+                <input type="text" id="adminSearchInput" placeholder="ค้นหาชื่อหนังสือ, ผู้ปล่อยเช่า, หมวดหมู่...">
+            </div>
+            <div class="user-profile">
+                <span id="adminProfileName" style="font-weight: 500;">Admin User</span>
+                <img id="adminProfileAvatar" src="" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <h1 class="page-title" id="pageTitle">แดชบอร์ด</h1>
+
+            <!-- Section: Dashboard -->
+            <div id="dashboard" class="admin-section active">
+                <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>หนังสือทั้งหมดในระบบ</h3>
+                        <p id="statTotalBooks">0</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>สมาชิกทั้งหมด</h3>
+                        <p id="statTotalUsers">0</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>รายการยืม-คืน (ประวัติ)</h3>
+                        <p id="statTotalHistory">0</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>รอตรวจสอบ</h3>
+                        <p id="statPendingBooks">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table for Dashboard (Latest) -->
+            <div class="table-section">
+                <div class="section-header">
+                    <h2 class="section-title">รายการอัปเดตล่าสุด</h2>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>รูปภาพ</th>
+                            <th>ชื่อหนังสือ</th>
+                            <th>ผู้ปล่อยเช่า</th>
+                            <th>หมวดหมู่</th>
+                            <th>มัดจำ</th>
+                            <th>สถานะ</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashboardBookList">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Books -->
+            <div id="books" class="admin-section">
+                <div class="table-section">
+                <div class="section-header">
+                    <h2 class="section-title">จัดการข้อมูลหนังสือ</h2>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>รูปภาพ</th>
+                            <th>ชื่อหนังสือ</th>
+                            <th>ผู้ปล่อยเช่า</th>
+                            <th>หมวดหมู่</th>
+                            <th>มัดจำ</th>
+                            <th>สถานะ</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminBookList">
+                    </tbody>
+                </table>
+                </div>
+            </div>
+
+            <!-- Section: Users -->
+            <div id="users" class="admin-section">
+                <div class="table-section">
+                    <div class="section-header">
+                        <h2 class="section-title">จัดการสมาชิก</h2>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>รูปภาพ</th>
+                                <th>ชื่อผู้ใช้</th>
+                                <th>สิทธิ์การใช้งาน</th>
+                                <th>จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminUserList">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Section: Rentals -->
+            <div id="rentals" class="admin-section">
+                <div class="table-section">
+                    <div class="section-header">
+                        <h2 class="section-title">ประวัติการยืม-คืน</h2>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>รหัสทำรายการ</th>
+                                <th>ชื่อหนังสือ</th>
+                                <th>ผู้เช่า</th>
+                                <th>มัดจำ</th>
+                                <th>สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminHistoryList">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Section: Reports -->
+            <div id="reports" class="admin-section">
+                <div class="table-section">
+                    <div class="section-header">
+                        <h2 class="section-title">รายงานสถิติ</h2>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 20px;">
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0;">
+                            <h3 style="color: #1e3a8a; margin-bottom: 16px;"><i class="fas fa-coins"></i> ยอดเงินมัดจำหมุนเวียน</h3>
+                            <p style="font-size: 2.5rem; font-weight: 700; color: #10b981;" id="reportTotalDeposit">0 ฿</p>
+                            <p style="margin-top: 10px; color: #64748b; font-size: 0.9rem;">(รวมยอดมัดจำของหนังสือที่กำลังถูกเช่าอยู่ทั้งหมด)</p>
+                        </div>
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0;">
+                            <h3 style="color: #1e3a8a; margin-bottom: 16px;"><i class="fas fa-chart-pie"></i> สัดส่วนหนังสือในระบบ</h3>
+                            <ul id="reportCategoryList" style="list-style: none; display: flex; flex-direction: column; gap: 10px; color: #475569;">
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ================= FIREBASE ================= -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCq0wj_mgvm9JiiZo95sk_UPrc8eWw3PUc",
+            authDomain: "bookrent-9f0b1.firebaseapp.com",
+            projectId: "bookrent-9f0b1",
+            storageBucket: "bookrent-9f0b1.firebasestorage.app",
+            messagingSenderId: "557926377087",
+            appId: "1:557926377087:web:0cd313f6c104f7aabc814a"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+    </script>
+
+    <script>
+        // Check Admin Login
+        let currentUser = JSON.parse(localStorage.getItem('bookrent_current_user')) || null;
+        if (!currentUser || currentUser.role !== "แอดมิน") {
+            alert("คุณไม่มีสิทธิ์เข้าถึงหน้านี้");
+            window.location.href = 'index.html';
+        }
+
+        // Data
+        let books = [];
+        let users = [];
+        let historyData = [];
+
+        // Firebase Listeners
+        db.collection("users").onSnapshot(snapshot => {
+            users = snapshot.docs.map(doc => doc.data());
+            renderDashboard();
+        });
+
+        db.collection("books").onSnapshot(snapshot => {
+            books = snapshot.docs.map(doc => doc.data());
+            renderDashboard();
+        });
+
+        db.collection("history").onSnapshot(snapshot => {
+            historyData = snapshot.docs.map(doc => doc.data());
+            renderDashboard();
+        });
+
+        // Save Function
+        function saveBooks() {
+            books.forEach(book => {
+                db.collection("books").doc(book.id.toString()).set(book);
+            });
+        }
+
+        function saveUsers() {
+            users.forEach(user => {
+                db.collection("users").doc(user.username).set(user);
+            });
+        }
+
+        // Render Dashboard
+        function renderDashboard() {
+            // Stats
+            document.getElementById('statTotalBooks').textContent = books.length;
+            document.getElementById('statTotalUsers').textContent = users.length;
+            document.getElementById('statTotalHistory').textContent = historyData.length;
+            
+            const pendingCount = books.filter(b => b.status === 'pending').length;
+            document.getElementById('statPendingBooks').textContent = pendingCount;
+
+            // Table
+            const tbody = document.getElementById('adminBookList');
+            const dashBody = document.getElementById('dashboardBookList');
+            tbody.innerHTML = '';
+            dashBody.innerHTML = '';
+
+            if (books.length === 0) {
+                const emptyRow = '<tr><td colspan="7" style="text-align:center; padding: 20px;">ยังไม่มีหนังสือในระบบ</td></tr>';
+                tbody.innerHTML = emptyRow;
+                dashBody.innerHTML = emptyRow;
+                return;
+            }
+
+            let count = 0;
+            books.slice().reverse().forEach(book => {
+                const tr = document.createElement('tr');
+                
+                let statusHtml = '';
+                let actionHtml = '';
+
+                if (book.status === 'pending') {
+                    statusHtml = '<span class="status orange" style="background-color: #ffedd5; color: #ea580c;">รอตรวจสอบ</span>';
+                    actionHtml = `
+                        <button onclick="approveBook(${book.id})" class="btn" style="background-color: #16a34a; padding: 6px 12px; margin-right: 4px; font-size: 0.75rem;">อนุมัติ</button>
+                        <button onclick="rejectBook(${book.id})" class="btn" style="background-color: #dc2626; padding: 6px 12px; font-size: 0.75rem;">ปฏิเสธ</button>
+                    `;
+                } else if (book.status === 'approved') {
+                    statusHtml = '<span class="status active">พร้อมเช่า</span>';
+                    actionHtml = `
+                        <button onclick="deleteBook(${book.id})" class="btn" style="background-color: #dc2626; padding: 6px 12px; font-size: 0.75rem;">ลบ</button>
+                    `;
+                } else if (book.status === 'rented') {
+                    statusHtml = `<span class="status returned" style="background-color: #fef08a; color: #854d0e;">ถูกเช่าอยู่</span>`;
+                    actionHtml = `
+                        <button onclick="returnBook(${book.id})" class="btn" style="background-color: #3b82f6; padding: 6px 12px; font-size: 0.75rem;">รับคืน</button>
+                    `;
+                } else {
+                    statusHtml = `<span class="status returned">${book.status}</span>`;
+                    actionHtml = '-';
+                }
+
+                tr.innerHTML = `
+                    <td><img src="${book.image}" style="width: 40px; height: 60px; object-fit: cover; border-radius: 4px;"></td>
+                    <td style="font-weight: 500;">${book.title}</td>
+                    <td>${book.owner || '-'}</td>
+                    <td>${book.category}</td>
+                    <td>${book.deposit} ฿</td>
+                    <td>${statusHtml}</td>
+                    <td>${actionHtml}</td>
+                `;
+                tbody.appendChild(tr);
+                
+                if (count < 5) {
+                    dashBody.appendChild(tr.cloneNode(true));
+                }
+                count++;
+            });
+
+            // ---------------- Users Table ----------------
+            const userBody = document.getElementById('adminUserList');
+            if (userBody) {
+                userBody.innerHTML = '';
+                if (users.length === 0) {
+                    userBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">ไม่มีข้อมูลสมาชิก</td></tr>';
+                } else {
+                    users.forEach(user => {
+                        const tr = document.createElement('tr');
+                        const roleStyle = user.role === 'แอดมิน' ? 'background-color: #dbeafe; color: #1e3a8a;' : 'background-color: #f3f4f6; color: #4b5563;';
+                        const toggleText = user.role === 'แอดมิน' ? 'ลดสิทธิ์' : 'ตั้งแอดมิน';
+                        
+                        tr.innerHTML = `
+                            <td><img src="${user.avatar || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;"></td>
+                            <td style="font-weight: 500;">${user.username}</td>
+                            <td><span class="status" style="${roleStyle}">${user.role}</span></td>
+                            <td>
+                                <button onclick="toggleUserRole('${user.username}')" class="btn" style="background-color: #3b82f6; padding: 6px 12px; font-size: 0.75rem; margin-right: 4px;">${toggleText}</button>
+                                <button onclick="deleteUser('${user.username}')" class="btn" style="background-color: #dc2626; padding: 6px 12px; font-size: 0.75rem;">ลบ</button>
+                            </td>
+                        `;
+                        userBody.appendChild(tr);
+                    });
+                }
+            }
+
+            // ---------------- History Table ----------------
+            const historyBody = document.getElementById('adminHistoryList');
+            if (historyBody) {
+                historyBody.innerHTML = '';
+                if (historyData.length === 0) {
+                    historyBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">ไม่มีประวัติการยืม-คืน</td></tr>';
+                } else {
+                    historyData.slice().reverse().forEach(historyItem => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${historyItem.id}</td>
+                            <td style="font-weight: 500;">${historyItem.bookTitle}</td>
+                            <td>${historyItem.username || historyItem.renter || '-'}</td>
+                            <td>${historyItem.deposit} ฿</td>
+                            <td><span class="status returned">${historyItem.status}</span></td>
+                        `;
+                        historyBody.appendChild(tr);
+                    });
+                }
+            }
+
+            // ---------------- Reports ----------------
+            const reportTotalDeposit = document.getElementById('reportTotalDeposit');
+            const reportCategoryList = document.getElementById('reportCategoryList');
+            if (reportTotalDeposit && reportCategoryList) {
+                const totalDeposit = books.filter(b => b.status === 'rented').reduce((sum, b) => sum + Number(b.deposit || 0), 0);
+                reportTotalDeposit.textContent = totalDeposit.toLocaleString() + ' ฿';
+
+                const categoryCounts = {};
+                books.forEach(b => {
+                    categoryCounts[b.category] = (categoryCounts[b.category] || 0) + 1;
+                });
+                
+                reportCategoryList.innerHTML = '';
+                if (Object.keys(categoryCounts).length === 0) {
+                    reportCategoryList.innerHTML = '<li>ไม่มีข้อมูล</li>';
+                } else {
+                    Object.keys(categoryCounts).forEach(cat => {
+                        const li = document.createElement('li');
+                        li.style = "display: flex; justify-content: space-between; border-bottom: 1px dashed #cbd5e1; padding-bottom: 8px;";
+                        li.innerHTML = `<span>${cat}</span> <span style="font-weight: 600;">${categoryCounts[cat]} เล่ม</span>`;
+                        reportCategoryList.appendChild(li);
+                    });
+                }
+            }
+        }
+
+        // Actions
+        window.approveBook = function(id) {
+            if(confirm("ยืนยันการอนุมัติหนังสือเล่มนี้?")) {
+                const book = books.find(b => b.id === id);
+                if(book) book.status = 'approved';
+                saveBooks();
+                renderDashboard();
+            }
+        };
+
+        window.rejectBook = function(id) {
+            if(confirm("ยืนยันการปฏิเสธหนังสือเล่มนี้?")) {
+                books = books.filter(b => b.id !== id);
+                saveBooks();
+                renderDashboard();
+            }
+        };
+
+        window.deleteBook = function(id) {
+            if(confirm("คุณต้องการลบหนังสือเล่มนี้ออกจากระบบใช่หรือไม่?")) {
+                books = books.filter(b => b.id !== id);
+                saveBooks();
+                renderDashboard();
+            }
+        };
+
+        window.toggleUserRole = function(username) {
+            if(username === currentUser.username) {
+                alert("ไม่สามารถเปลี่ยนสิทธิ์ของตัวเองได้");
+                return;
+            }
+            if(confirm(`ยืนยันการเปลี่ยนสิทธิ์ของ ${username}?`)) {
+                const userIndex = users.findIndex(u => u.username === username);
+                if (userIndex !== -1) {
+                    users[userIndex].role = users[userIndex].role === 'แอดมิน' ? 'สมาชิก' : 'แอดมิน';
+                    saveUsers();
+                    renderDashboard();
+                }
+            }
+        };
+
+        window.deleteUser = function(username) {
+            if(username === currentUser.username) {
+                alert("ไม่สามารถลบตัวเองได้");
+                return;
+            }
+            if(confirm(`ยืนยันการลบผู้ใช้ ${username} ออกจากระบบถาวร?`)) {
+                users = users.filter(u => u.username !== username);
+                saveUsers();
+                renderDashboard();
+            }
+        };
+
+        // Menu Navigation
+        const navLinks = document.querySelectorAll('.nav-link[data-target]');
+        const adminSections = document.querySelectorAll('.admin-section');
+        const pageTitle = document.getElementById('pageTitle');
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Update active class
+                navLinks.forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Show target section
+                const targetId = this.getAttribute('data-target');
+                adminSections.forEach(sec => sec.classList.remove('active'));
+                document.getElementById(targetId).classList.add('active');
+                
+                // Update Title
+                pageTitle.textContent = this.textContent.trim();
+            });
+        });
+
+        window.returnBook = function(id) {
+            if(confirm("ยืนยันการรับคืนหนังสือเล่มนี้ (สถานะจะกลับเป็นพร้อมเช่า)?")) {
+                const book = books.find(b => b.id === id);
+                if(book) book.status = 'approved';
+                saveBooks();
+                renderDashboard();
+            }
+        };
+
+        // Search Functionality
+        document.getElementById('adminSearchInput').addEventListener('keyup', function(e) {
+            const keyword = e.target.value.toLowerCase();
+            const trs = document.getElementById('adminBookList').querySelectorAll('tr');
+            trs.forEach(tr => {
+                if (tr.cells.length > 1) {
+                    const text = tr.innerText.toLowerCase();
+                    if (text.includes(keyword)) {
+                        tr.style.display = '';
+                    } else {
+                        tr.style.display = 'none';
+                    }
+                }
+            });
+        });
+
+        // Logout
+        document.getElementById('adminLogoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.setItem('bookrent_current_user', JSON.stringify(null));
+            alert('ออกจากระบบแอดมินเรียบร้อยแล้ว');
+            window.location.href = 'index.html';
+        });
+
+        // Initialize
+        if (currentUser) {
+            document.getElementById('adminProfileName').textContent = currentUser.username;
+            document.getElementById('adminProfileAvatar').src = currentUser.avatar || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+        }
+        renderDashboard();
+    </script>
+</body>
+</html>
