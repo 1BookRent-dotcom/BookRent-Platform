@@ -298,6 +298,7 @@
             <li class="nav-item"><a href="#" class="nav-link" data-target="books"><i class="fas fa-book"></i> จัดการหนังสือ</a></li>
             <li class="nav-item"><a href="#" class="nav-link" data-target="users"><i class="fas fa-users"></i> จัดการสมาชิก</a></li>
             <li class="nav-item"><a href="#" class="nav-link" data-target="rentals"><i class="fas fa-exchange-alt"></i> การยืม-คืน</a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-target="withdrawals"><i class="fas fa-money-bill-wave"></i> รายการถอนเงิน</a></li>
             <li class="nav-item"><a href="#" class="nav-link" data-target="reports"><i class="fas fa-chart-bar"></i> รายงานสถิติ</a></li>
         </ul>
         <div style="padding: 20px; border-top: 1px solid #374151;">
@@ -454,6 +455,29 @@
                 </div>
             </div>
 
+            <!-- Section: Withdrawals -->
+            <div id="withdrawals" class="admin-section">
+                <div class="table-section">
+                    <div class="section-header">
+                        <h2 class="section-title">รายการแจ้งถอนเงินมัดจำ</h2>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>รหัสคำขอ</th>
+                                <th>ผู้ใช้งาน</th>
+                                <th>ยอดเงิน (บาท)</th>
+                                <th>บัญชีธนาคาร</th>
+                                <th>สถานะ</th>
+                                <th>จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminWithdrawalList">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- Section: Reports -->
             <div id="reports" class="admin-section">
                 <div class="table-section">
@@ -506,6 +530,7 @@
         let books = [];
         let users = [];
         let historyData = [];
+        let withdrawalsData = [];
 
         // Firebase Listeners
         db.collection("users").onSnapshot(snapshot => {
@@ -520,6 +545,11 @@
 
         db.collection("history").onSnapshot(snapshot => {
             historyData = snapshot.docs.map(doc => doc.data());
+            renderDashboard();
+        });
+        
+        db.collection("withdrawals").onSnapshot(snapshot => {
+            withdrawalsData = snapshot.docs.map(doc => doc.data());
             renderDashboard();
         });
 
@@ -578,10 +608,18 @@
                         <button onclick="deleteBook(${book.id})" class="btn" style="background-color: #dc2626; padding: 6px 12px; font-size: 0.75rem;">ลบ</button>
                     `;
                 } else if (book.status === 'rented') {
-                    statusHtml = `<span class="status returned" style="background-color: #fef08a; color: #854d0e;">ถูกเช่าอยู่</span>`;
-                    actionHtml = `
-                        <button onclick="returnBook(${book.id})" class="btn" style="background-color: #3b82f6; padding: 6px 12px; font-size: 0.75rem;">รับคืน</button>
-                    `;
+                    const pendingReturn = historyData.find(h => h.bookTitle === book.title && h.status === 'รอรับคืน');
+                    if (pendingReturn) {
+                        statusHtml = `<span class="status" style="background-color: #ffedd5; color: #ea580c;">รอแอดมินรับคืน</span>`;
+                        actionHtml = `
+                            <button onclick="returnBook(${book.id})" class="btn" style="background-color: #16a34a; padding: 6px 12px; font-size: 0.75rem;">ยืนยันรับคืน</button>
+                        `;
+                    } else {
+                        statusHtml = `<span class="status returned" style="background-color: #fef08a; color: #854d0e;">ถูกเช่าอยู่</span>`;
+                        actionHtml = `
+                            <button onclick="returnBook(${book.id})" class="btn" style="background-color: #3b82f6; padding: 6px 12px; font-size: 0.75rem;">รับคืน (บังคับ)</button>
+                        `;
+                    }
                 } else {
                     statusHtml = `<span class="status returned">${book.status}</span>`;
                     actionHtml = '-';
@@ -651,6 +689,48 @@
                 }
             }
 
+            // ---------------- Withdrawal Table ----------------
+            const withdrawalBody = document.getElementById('adminWithdrawalList');
+            if (withdrawalBody) {
+                withdrawalBody.innerHTML = '';
+                if (withdrawalsData.length === 0) {
+                    withdrawalBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px;">ไม่มีคำขอถอนเงิน</td></tr>';
+                } else {
+                    withdrawalsData.slice().sort((a,b) => b.id - a.id).forEach(wItem => {
+                        const tr = document.createElement('tr');
+                        
+                        let statusHtml = '';
+                        let actionHtml = '-';
+
+                        if (wItem.status === 'รอโอนเงิน') {
+                            statusHtml = '<span class="status orange" style="background-color: #ffedd5; color: #ea580c;">รอโอนเงิน</span>';
+                            actionHtml = `
+                                <button onclick="approveWithdrawal(${wItem.id})" class="btn" style="background-color: #16a34a; padding: 6px 12px; margin-right: 4px; font-size: 0.75rem;">โอนเงินแล้ว</button>
+                                <button onclick="rejectWithdrawal(${wItem.id})" class="btn" style="background-color: #dc2626; padding: 6px 12px; font-size: 0.75rem;">ปฏิเสธ</button>
+                            `;
+                        } else if (wItem.status === 'โอนสำเร็จ') {
+                            statusHtml = '<span class="status active">โอนสำเร็จ</span>';
+                        } else if (wItem.status === 'ปฏิเสธ') {
+                            statusHtml = '<span class="status late">ปฏิเสธ</span>';
+                        }
+                        
+                        tr.innerHTML = `
+                            <td>${wItem.id}</td>
+                            <td style="font-weight: 500;">${wItem.username}</td>
+                            <td style="color: #ef4444; font-weight: 600;">${wItem.amount} ฿</td>
+                            <td>
+                                <div>${wItem.bank}</div>
+                                <div style="font-size: 0.8rem; color: #64748b;">${wItem.accountNo}</div>
+                                <div style="font-size: 0.8rem; color: #64748b;">${wItem.accountName}</div>
+                            </td>
+                            <td>${statusHtml}</td>
+                            <td>${actionHtml}</td>
+                        `;
+                        withdrawalBody.appendChild(tr);
+                    });
+                }
+            }
+            
             // ---------------- Reports ----------------
             const reportTotalDeposit = document.getElementById('reportTotalDeposit');
             const reportCategoryList = document.getElementById('reportCategoryList');
@@ -681,25 +761,22 @@
         window.approveBook = function(id) {
             if(confirm("ยืนยันการอนุมัติหนังสือเล่มนี้?")) {
                 const book = books.find(b => b.id === id);
-                if(book) book.status = 'approved';
-                saveBooks();
-                renderDashboard();
+                if(book) {
+                    book.status = 'approved';
+                    db.collection("books").doc(book.id.toString()).set(book);
+                }
             }
         };
 
         window.rejectBook = function(id) {
             if(confirm("ยืนยันการปฏิเสธหนังสือเล่มนี้?")) {
-                books = books.filter(b => b.id !== id);
-                saveBooks();
-                renderDashboard();
+                db.collection("books").doc(id.toString()).delete();
             }
         };
 
         window.deleteBook = function(id) {
             if(confirm("คุณต้องการลบหนังสือเล่มนี้ออกจากระบบใช่หรือไม่?")) {
-                books = books.filter(b => b.id !== id);
-                saveBooks();
-                renderDashboard();
+                db.collection("books").doc(id.toString()).delete();
             }
         };
 
@@ -712,8 +789,7 @@
                 const userIndex = users.findIndex(u => u.username === username);
                 if (userIndex !== -1) {
                     users[userIndex].role = users[userIndex].role === 'แอดมิน' ? 'สมาชิก' : 'แอดมิน';
-                    saveUsers();
-                    renderDashboard();
+                    db.collection("users").doc(username).set(users[userIndex]);
                 }
             }
         };
@@ -724,9 +800,33 @@
                 return;
             }
             if(confirm(`ยืนยันการลบผู้ใช้ ${username} ออกจากระบบถาวร?`)) {
-                users = users.filter(u => u.username !== username);
-                saveUsers();
-                renderDashboard();
+                db.collection("users").doc(username).delete();
+            }
+        };
+
+        window.approveWithdrawal = function(id) {
+            if (confirm("คุณได้ทำการโอนเงินให้กับผู้ใช้งานเรียบร้อยแล้วใช่หรือไม่?")) {
+                const wItem = withdrawalsData.find(w => w.id === id);
+                if (wItem) {
+                    wItem.status = "โอนสำเร็จ";
+                    db.collection("withdrawals").doc(wItem.id.toString()).set(wItem);
+                }
+            }
+        };
+
+        window.rejectWithdrawal = function(id) {
+            if (confirm("ยืนยันการปฏิเสธคำขอถอนเงิน? ยอดเงินจะถูกคืนกลับเข้าเครดิตมัดจำของผู้ใช้")) {
+                const wItem = withdrawalsData.find(w => w.id === id);
+                if (wItem) {
+                    wItem.status = "ปฏิเสธ";
+                    db.collection("withdrawals").doc(wItem.id.toString()).set(wItem);
+                    
+                    const userIndex = users.findIndex(u => u.username === wItem.username);
+                    if (userIndex !== -1) {
+                        users[userIndex].depositCredit = (Number(users[userIndex].depositCredit) || 0) + Number(wItem.amount);
+                        db.collection("users").doc(users[userIndex].username).set(users[userIndex]);
+                    }
+                }
             }
         };
 
@@ -754,10 +854,24 @@
         });
 
         window.returnBook = function(id) {
-            if(confirm("ยืนยันการรับคืนหนังสือเล่มนี้ (สถานะจะกลับเป็นพร้อมเช่า)?")) {
+            if(confirm("ยืนยันการรับคืนหนังสือเล่มนี้ (สถานะจะกลับเป็นพร้อมเช่า และเครดิตมัดจำจะถูกคืนให้ผู้เช่า)?")) {
                 const book = books.find(b => b.id === id);
-                if(book) book.status = 'approved';
-                saveBooks();
+                if(book) {
+                    book.status = 'approved';
+                    
+                    const hItem = historyData.find(h => h.bookTitle === book.title && (h.status === "ชำระเงินแล้ว" || h.status === "รอรับคืน"));
+                    if (hItem) {
+                        hItem.status = "คืนแล้ว";
+                        db.collection("history").doc(hItem.id.toString()).set(hItem);
+                        
+                        const userIndex = users.findIndex(u => u.username === hItem.username);
+                        if (userIndex !== -1) {
+                            users[userIndex].depositCredit = (Number(users[userIndex].depositCredit) || 0) + Number(hItem.deposit);
+                            db.collection("users").doc(users[userIndex].username).set(users[userIndex]);
+                        }
+                    }
+                    saveBooks();
+                }
                 renderDashboard();
             }
         };

@@ -42,6 +42,15 @@ let currentUser =
 // Firebase Listeners
 db.collection("users").onSnapshot(snapshot => {
     users = snapshot.docs.map(doc => doc.data());
+    
+    if (currentUser) {
+        const updatedUser = users.find(u => u.username === currentUser.username);
+        if (updatedUser) {
+            currentUser = updatedUser;
+            saveCurrentUser();
+        }
+    }
+    
     updateProfileUI();
 });
 
@@ -143,6 +152,9 @@ function updateProfileUI() {
 
         if($("profileRole")) $("profileRole").textContent =
             currentUser.role;
+            
+        if($("profileCredit")) $("profileCredit").textContent =
+            "เครดิตมัดจำ: " + (currentUser.depositCredit || 0) + " ฿";
 
     } else {
 
@@ -302,6 +314,8 @@ if($("registerBtn")) $("registerBtn")
             password,
 
             role: "ผู้ใช้งาน",
+            
+            depositCredit: 0,
 
             avatar:
                 "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
@@ -427,6 +441,28 @@ if($("bookImage")) $("bookImage")
     });
 
 // ===============================
+// RENT PACKAGES TOGGLE
+// ===============================
+
+if($("package7")) $("package7").addEventListener("change", function() {
+    if (this.checked) {
+        $("price7").classList.remove("hidden");
+    } else {
+        $("price7").classList.add("hidden");
+        $("price7").value = "";
+    }
+});
+
+if($("package14")) $("package14").addEventListener("change", function() {
+    if (this.checked) {
+        $("price14").classList.remove("hidden");
+    } else {
+        $("price14").classList.add("hidden");
+        $("price14").value = "";
+    }
+});
+
+// ===============================
 // TELEGRAM NOTIFY
 // ===============================
 
@@ -538,6 +574,22 @@ if($("bookForm")) $("bookForm")
             $("bookDeposit")
                 .value;
 
+        const hasPackage7 = $("package7") && $("package7").checked;
+        const price7 = hasPackage7 ? $("price7").value : null;
+        
+        const hasPackage14 = $("package14") && $("package14").checked;
+        const price14 = hasPackage14 ? $("price14").value : null;
+
+        if (!hasPackage7 && !hasPackage14) {
+            alert("กรุณาเลือกแพ็กเกจค่าเช่าอย่างน้อย 1 อย่าง");
+            return;
+        }
+
+        if ((hasPackage7 && !price7) || (hasPackage14 && !price14)) {
+            alert("กรุณากรอกราคาสำหรับแพ็กเกจที่เลือก");
+            return;
+        }
+
         const image =
             $("previewImage").src;
 
@@ -582,6 +634,10 @@ if($("bookForm")) $("bookForm")
             description,
             category,
             deposit,
+            hasPackage7,
+            price7: price7 ? Number(price7) : 0,
+            hasPackage14,
+            price14: price14 ? Number(price14) : 0,
             image,
 
             owner:
@@ -830,45 +886,137 @@ function searchBooks() {
 
 
 // ===============================
+// WITHDRAW SYSTEM
+// ===============================
+
+if($("openWithdrawBtn")) $("openWithdrawBtn").addEventListener("click", () => {
+    if (!currentUser || currentUser.depositCredit <= 0) {
+        alert("คุณไม่มีเครดิตมัดจำให้ถอน");
+        return;
+    }
+    $("withdrawAmount").max = currentUser.depositCredit;
+    $("withdrawModal").classList.remove("hidden");
+});
+
+if($("closeWithdrawModal")) $("closeWithdrawModal").addEventListener("click", () => {
+    $("withdrawModal").classList.add("hidden");
+});
+
+if($("confirmWithdrawBtn")) $("confirmWithdrawBtn").addEventListener("click", () => {
+    const amount = Number($("withdrawAmount").value);
+    const bank = $("withdrawBank").value;
+    const accountNo = $("withdrawAccountNo").value.trim();
+    const accountName = $("withdrawAccountName").value.trim();
+
+    if (!amount || !bank || !accountNo || !accountName) {
+        alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+        return;
+    }
+
+    if (amount <= 0 || amount > Number(currentUser.depositCredit)) {
+        alert("ยอดเงินไม่ถูกต้อง หรือเกินกว่าเครดิตที่มี");
+        return;
+    }
+
+    if (confirm(`ยืนยันการถอนเงินจำนวน ${amount} บาท ไปยังบัญชี ${bank} (${accountNo}) ใช่หรือไม่?`)) {
+        
+        currentUser.depositCredit = Number(currentUser.depositCredit) - amount;
+        saveCurrentUser();
+        
+        const uIndex = users.findIndex(u => u.username === currentUser.username);
+        if (uIndex !== -1) {
+            users[uIndex].depositCredit = currentUser.depositCredit;
+            db.collection("users").doc(currentUser.username).set(users[uIndex]);
+            updateProfileUI();
+        }
+
+        const withdrawData = {
+            id: Date.now(),
+            username: currentUser.username,
+            amount: amount,
+            bank: bank,
+            accountNo: accountNo,
+            accountName: accountName,
+            status: "รอโอนเงิน",
+            timestamp: new Date().toISOString()
+        };
+
+        db.collection("withdrawals").doc(withdrawData.id.toString()).set(withdrawData).then(() => {
+            alert("ส่งคำขอถอนเงินเรียบร้อยแล้ว กรุณารอแอดมินดำเนินการโอนเงิน");
+            $("withdrawModal").classList.add("hidden");
+            
+            $("withdrawAmount").value = "";
+            $("withdrawBank").value = "";
+            $("withdrawAccountNo").value = "";
+            $("withdrawAccountName").value = "";
+        }).catch(err => {
+            alert("เกิดข้อผิดพลาดในการส่งคำขอถอนเงิน");
+            console.error(err);
+        });
+    }
+});
+
+// ===============================
 // RENT SYSTEM
 // ===============================
 
 let selectedBook = null;
+let selectedRentPackage = null;
+let currentRentPrice = 0;
 
 function openRentModal(book) {
-
     if (!currentUser) {
-
-        alert(
-            "กรุณา Login ก่อน"
-        );
-
+        alert("กรุณา Login ก่อน");
         return;
-
     }
 
     selectedBook = book;
+    selectedRentPackage = null;
+    currentRentPrice = 0;
 
-    $("rentModal")
-        .classList.remove("hidden");
+    $("rentModal").classList.remove("hidden");
+    $("rentBookImage").src = book.image;
+    $("rentBookTitle").textContent = book.title;
+    $("rentBookAuthor").textContent = "ผู้เขียน: " + book.author;
+    $("rentBookCategory").textContent = "หมวด: " + book.category;
+    $("rentBookDeposit").textContent = "มัดจำ: " + book.deposit + " บาท";
 
-    $("rentBookImage").src =
-        book.image;
+    let packageHTML = '';
+    if (book.hasPackage7) {
+        packageHTML += `<label style="display:flex; gap:8px; margin-bottom:8px; cursor:pointer;"><input type="radio" name="rentPkg" value="7" data-price="${book.price7}"> ระยะสั้น 1-7 วัน (ค่าเช่า ${book.price7} บาท)</label>`;
+    }
+    if (book.hasPackage14) {
+        packageHTML += `<label style="display:flex; gap:8px; margin-bottom:8px; cursor:pointer;"><input type="radio" name="rentPkg" value="14" data-price="${book.price14}"> ระยะยาว 7-14 วัน (ค่าเช่า ${book.price14} บาท)</label>`;
+    }
+    if (!book.hasPackage7 && !book.hasPackage14) {
+        packageHTML = '<p style="color:#ef4444;">ไม่มีแพ็กเกจเช่า</p>';
+    }
+    $("rentPackageSelection").innerHTML = packageHTML;
 
-    $("rentBookTitle").textContent =
-        book.title;
+    const radios = document.querySelectorAll('input[name="rentPkg"]');
+    radios.forEach(r => r.addEventListener('change', function() {
+        selectedRentPackage = this.value;
+        currentRentPrice = Number(this.dataset.price);
+        updateRentSummary();
+    }));
 
-    $("rentBookAuthor").textContent =
-        "ผู้เขียน: " + book.author;
+    updateRentSummary();
+}
 
-    $("rentBookCategory").textContent =
-        "หมวด: " + book.category;
-
-    $("rentBookDeposit").textContent =
-        "มัดจำ: " +
-        book.deposit +
-        " บาท";
-
+function updateRentSummary() {
+    const credit = Number(currentUser.depositCredit || 0);
+    const deposit = Number(selectedBook.deposit || 0);
+    const rent = currentRentPrice;
+    
+    let requiredDeposit = deposit - credit;
+    if (requiredDeposit < 0) requiredDeposit = 0;
+    
+    const total = requiredDeposit + rent;
+    
+    if($("rentSummaryCredit")) $("rentSummaryCredit").textContent = "เครดิตมัดจำที่มี: " + credit + " บาท";
+    if($("rentSummaryDeposit")) $("rentSummaryDeposit").textContent = "ค้างมัดจำเพิ่ม: " + requiredDeposit + " บาท";
+    if($("rentSummaryRent")) $("rentSummaryRent").textContent = "ค่าเช่า: " + rent + " บาท";
+    if($("rentSummaryTotal")) $("rentSummaryTotal").textContent = "ยอดที่ต้องโอน: " + total + " บาท";
 }
 
 // ===============================
@@ -889,6 +1037,11 @@ if($("closeRentModal")) $("closeRentModal")
 
 if($("confirmRentBtn")) $("confirmRentBtn")
     .addEventListener("click", () => {
+        
+        if (!selectedRentPackage) {
+            alert("กรุณาเลือกระยะเวลาเช่า");
+            return;
+        }
 
         const name =
             $("shippingName")
@@ -1013,6 +1166,20 @@ if($("confirmPaymentBtn")) $("confirmPaymentBtn")
 
         }
 
+        const credit = Number(currentUser.depositCredit || 0);
+        const deposit = Number(selectedBook.deposit || 0);
+        const usedCredit = Math.min(deposit, credit);
+        
+        currentUser.depositCredit = credit - usedCredit;
+        saveCurrentUser();
+        
+        const uIndex = users.findIndex(u => u.username === currentUser.username);
+        if (uIndex !== -1) {
+            users[uIndex].depositCredit = currentUser.depositCredit;
+            saveUsers();
+            updateProfileUI();
+        }
+
         const rentData = {
 
             id: Date.now(),
@@ -1026,8 +1193,9 @@ if($("confirmPaymentBtn")) $("confirmPaymentBtn")
             bookTitle:
                 selectedBook.title,
 
-            deposit:
-                selectedBook.deposit,
+            deposit: deposit,
+            rentPrice: currentRentPrice,
+            rentPackage: selectedRentPackage,
 
             status:
                 "ชำระเงินแล้ว"
@@ -1097,6 +1265,17 @@ function renderHistory() {
         card.className =
             "history-card";
 
+        let actionBtn = "";
+        if (item.status === "ชำระเงินแล้ว" && currentUser && item.username === currentUser.username) {
+            actionBtn = `<button type="button" class="return-btn" onclick="returnBookByUser(${item.id})" style="background-color: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; margin-top: 10px; font-weight: 500; width: 100%;">แจ้งคืนหนังสือ</button>`;
+        } else if (item.status === "รอรับคืน" && currentUser && item.username === currentUser.username) {
+            actionBtn = `<p style="font-size: 0.85rem; color: #ea580c; margin-top: 10px; font-weight: 500; text-align: center;">รอแอดมินตรวจสอบการคืน</p>`;
+        }
+        
+        let packageText = "-";
+        if (item.rentPackage === "7") packageText = "1-7 วัน";
+        if (item.rentPackage === "14") packageText = "7-14 วัน";
+
         card.innerHTML = `
 
         <img src="${item.image}">
@@ -1110,14 +1289,20 @@ function renderHistory() {
             <p>
                 👤 ${item.username}
             </p>
-
-            <p>
-                💰 ${item.deposit} บาท
+            
+            <p style="font-size: 0.85rem; color: #475569; margin-top: 4px;">
+                ⏱️ เช่าแบบ: ${packageText}
             </p>
 
-            <p class="paid-status">
+            <p style="margin-top: 4px;">
+                💰 มัดจำ ${item.deposit} | ค่าเช่า ${item.rentPrice || 0} ฿
+            </p>
+
+            <p class="paid-status" style="margin-top: 4px;">
                 ${item.status}
             </p>
+            
+            ${actionBtn}
 
         </div>
 
@@ -1131,6 +1316,19 @@ function renderHistory() {
 }
 
 renderHistory();
+
+window.returnBookByUser = function(historyId) {
+    if (!confirm("ยืนยันการแจ้งคืนหนังสือ? ระบบจะส่งเรื่องให้แอดมินตรวจสอบ เมื่อแอดมินรับคืนแล้ว เครดิตมัดจำจะถูกเพิ่มเข้าบัญชีของคุณ")) return;
+    
+    const hItem = history.find(h => h.id === historyId);
+    if (hItem) {
+        hItem.status = "รอรับคืน";
+        saveHistory();
+        
+        renderHistory();
+        alert("แจ้งคืนหนังสือสำเร็จ! กรุณารอแอดมินตรวจสอบการคืนหนังสือ");
+    }
+}
 
 // ===============================
 // REVIEW SYSTEM
