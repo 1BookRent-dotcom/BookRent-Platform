@@ -624,12 +624,32 @@ body{
     margin-bottom:12px;
 }
 
+.review-user-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.review-user-box img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.review-user-box h4 {
+    margin-bottom: 2px;
+    font-size: 1rem;
+    color: #1e293b;
+}
+
 .review-user{
     font-weight:700;
 }
 
 .review-stars{
     color:#facc15;
+    font-size: 0.9rem;
 }
 
 /* =========================
@@ -992,70 +1012,32 @@ body{
 ========================= */
 
 @media(max-width:1000px){
-
-    .rent-grid{
-        grid-template-columns:1fr;
-    }
-
-    .hero h1{
-        font-size:2.8rem;
-    }
-
+    .rent-grid{ grid-template-columns:1fr; }
+    .hero h1{ font-size:2.8rem; }
 }
 
 @media(max-width:800px){
-
-    .navbar{
-        flex-direction:column;
-        gap:20px;
-    }
-
-    .nav-links{
-        flex-wrap:wrap;
-        justify-content:center;
-        gap:20px;
-    }
-
-    .hero{
-        min-height:350px;
-    }
-
-    .hero h1{
-        font-size:2.2rem;
-    }
-
-    .search-box{
-        flex-direction:column;
-    }
-
-    .search-box button{
-        width:100%;
-        padding:18px;
-    }
-
+    .navbar{ flex-direction:column; gap:15px; padding: 15px 5%; }
+    .nav-links{ flex-wrap:wrap; justify-content:center; gap:10px; font-size: 0.9rem; }
+    .nav-links a { padding: 5px; }
+    .hero{ min-height:300px; padding: 50px 5%; }
+    .hero h1{ font-size:2.2rem; }
+    .search-section{ margin-top:-30px; }
+    .search-box{ flex-direction:column; border-radius: 16px; }
+    .search-box input { padding: 15px; }
+    .search-box button{ width:100%; padding:15px; }
+    .listing-box, .rent-box, .payment-box, .terms-content-box { padding: 20px; }
+    .book-grid { gap: 15px; }
 }
 
 @media(max-width:600px){
-
-    .book-grid{
-        grid-template-columns:1fr;
-    }
-
-    .history-grid{
-        grid-template-columns:1fr;
-    }
-
-    .payment-buttons{
-        flex-direction:column;
-    }
-
-    .auth-buttons{
-        flex-direction:column;
-    }
-
-    .user-box{
-        width:100%;
-        justify-content:center;
-    }
-
+    .book-grid, .history-grid, .admin-books { grid-template-columns:1fr; }
+    .payment-buttons, .auth-buttons, .guest-actions { flex-direction:column; width: 100%; gap: 10px; }
+    .guest-actions button { width: 100%; }
+    .user-box{ width:100%; justify-content:center; flex-direction: column; text-align: center; }
+    .store-rate-summary { flex-direction: column; gap: 5px; }
+    .category-buttons { justify-content: center; }
+    .hero h1{ font-size: 1.8rem; }
+    .hero p { font-size: 1rem; }
+    .terms-box-check { flex-direction: column; align-items: flex-start; gap: 10px; }
 }

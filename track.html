@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ติดตามสถานะหนังสือ - BookRent</title>
+    <!-- FONT & ICON -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- STYLE -->
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body { background: #f8fafc; font-family: 'Kanit', sans-serif; color: #1e293b; min-height: 100vh; display: flex; flex-direction: column; }
+        .track-header { background: white; padding: 20px 5%; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; }
+        .track-logo { font-size: 1.5rem; font-weight: 700; color: #2563eb; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+        
+        .track-container { flex: 1; max-width: 800px; margin: 40px auto; width: 90%; }
+        .search-hero { text-align: center; margin-bottom: 40px; }
+        .search-hero h1 { font-size: 2.2rem; color: #1e3a8a; margin-bottom: 15px; }
+        .search-box-large { display: flex; background: white; border-radius: 99px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.08); max-width: 600px; margin: auto; border: 2px solid #eff6ff; transition: 0.3s; }
+        .search-box-large:focus-within { border-color: #3b82f6; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15); }
+        .search-box-large input { flex: 1; border: none; padding: 20px 25px; font-size: 1.1rem; outline: none; font-family: 'Kanit', sans-serif; }
+        .search-box-large button { background: #2563eb; color: white; border: none; padding: 0 35px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .search-box-large button:hover { background: #1d4ed8; }
+
+        .result-card { background: white; border-radius: 24px; padding: 35px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); display: none; margin-bottom: 40px; }
+        .result-card.active { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .delivery-info { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 25px; border-bottom: 1px dashed #cbd5e1; margin-bottom: 30px; flex-wrap: wrap; gap: 20px; }
+        .courier-box { display: flex; align-items: center; gap: 15px; }
+        .courier-logo { width: 55px; height: 55px; border-radius: 12px; background: #fee2e2; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #ef4444; }
+        .courier-details h3 { font-size: 1.2rem; margin-bottom: 2px; }
+        .courier-details p { color: #64748b; font-size: 0.95rem; }
+        
+        .badges-box { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+        .badge { padding: 8px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 600; display: inline-block; }
+        .badge-eta { background: #dcfce7; color: #166534; }
+        .badge-payment { background: #fef08a; color: #854d0e; }
+        .badge-payment.paid { background: #e0e7ff; color: #3730a3; }
+
+        /* Stepper Timeline */
+        .timeline { position: relative; margin-top: 20px; }
+        .timeline::before { content: ''; position: absolute; left: 24px; top: 10px; bottom: 30px; width: 2px; background: #e2e8f0; }
+        
+        .timeline-item { position: relative; display: flex; gap: 25px; margin-bottom: 35px; }
+        .timeline-item:last-child { margin-bottom: 0; }
+        .timeline-icon { width: 50px; height: 50px; border-radius: 50%; background: white; border: 3px solid #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #94a3b8; z-index: 1; transition: 0.3s; }
+        .timeline-content { flex: 1; padding-top: 10px; }
+        .timeline-content h4 { font-size: 1.1rem; color: #475569; margin-bottom: 4px; }
+        .timeline-content p { color: #94a3b8; font-size: 0.9rem; }
+        .timeline-content .time { font-size: 0.8rem; color: #cbd5e1; margin-top: 4px; display: block; }
+
+        .timeline-item.active .timeline-icon { border-color: #2563eb; background: #2563eb; color: white; box-shadow: 0 0 0 4px #dbeafe; }
+        .timeline-item.active .timeline-content h4 { color: #1e293b; }
+        .timeline-item.active .timeline-content p { color: #64748b; }
+        
+        .timeline-item.done .timeline-icon { border-color: #10b981; background: #10b981; color: white; }
+        .timeline-item.done .timeline-content h4 { color: #1e293b; }
+
+        .error-msg { text-align: center; color: #ef4444; padding: 20px; background: #fee2e2; border-radius: 12px; margin-top: 20px; display: none; font-weight: 500; }
+
+        @media(max-width: 600px){
+            .search-hero h1 { font-size: 1.8rem; }
+            .search-box-large { flex-direction: column; border-radius: 16px; border: none; }
+            .search-box-large input { border-bottom: 1px solid #e2e8f0; }
+            .search-box-large button { padding: 18px; border-radius: 0 0 16px 16px; }
+            .result-card { padding: 25px; }
+            .delivery-info { flex-direction: column; align-items: flex-start; }
+            .badges-box { align-items: flex-start; flex-direction: row; flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="track-header">
+        <a href="index.html" class="track-logo">
+            <i class="fa-solid fa-book-open"></i> BookRent
+        </a>
+        <a href="index.html" style="color: #64748b; text-decoration: none; font-weight: 500; transition: 0.2s;" onmouseover="this.style.color='#1e293b'" onmouseout="this.style.color='#64748b'">
+            <i class="fa-solid fa-arrow-left"></i> กลับหน้าหลัก
+        </a>
+    </header>
+
+    <div class="track-container">
+        <div class="search-hero">
+            <h1>ติดตามสถานะการจัดส่ง</h1>
+            <p style="color: #64748b; margin-bottom: 25px;">กรอกรหัสการเช่า (Rental ID) ของคุณเพื่อตรวจสอบสถานะพัสดุ</p>
+            <form id="trackForm" class="search-box-large">
+                <input type="text" id="trackInput" placeholder="เช่น #BK-1716886481977" required autocomplete="off">
+                <button type="submit"><i class="fa-solid fa-magnifying-glass"></i> ค้นหา</button>
+            </form>
+            <div id="errorMsg" class="error-msg">ไม่พบข้อมูลการเช่านี้ กรุณาตรวจสอบรหัสอีกครั้ง</div>
+        </div>
+
+        <div id="resultCard" class="result-card">
+            <div class="delivery-info">
+                <div class="courier-box">
+                    <div class="courier-logo" id="courierIcon">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <div class="courier-details">
+                        <h3 id="courierName">Flash Express</h3>
+                        <p>Tracking: <span id="trackingNumber" style="font-weight: 600; color: #2563eb;">TH0101XXXXX</span></p>
+                    </div>
+                </div>
+                <div class="badges-box">
+                    <span class="badge badge-eta" id="etaBadge"><i class="fa-regular fa-clock"></i> คาดว่าจะถึงในอีก 1-2 วัน</span>
+                    <span class="badge badge-payment paid" id="paymentBadge"><i class="fa-solid fa-check-circle"></i> ชำระเงินออนไลน์แล้ว</span>
+                </div>
+            </div>
+
+            <div class="timeline" id="timelineContainer">
+                <!-- Timeline items will be injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= FIREBASE ================= -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCq0wj_mgvm9JiiZo95sk_UPrc8eWw3PUc",
+            authDomain: "bookrent-9f0b1.firebaseapp.com",
+            projectId: "bookrent-9f0b1",
+            storageBucket: "bookrent-9f0b1.firebasestorage.app",
+            messagingSenderId: "557926377087",
+            appId: "1:557926377087:web:0cd313f6c104f7aabc814a"
+        };
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+
+        // Extract ID from URL if present
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlId = urlParams.get('id');
+        if (urlId) {
+            document.getElementById('trackInput').value = urlId;
+            searchTrack(urlId);
+        }
+
+        document.getElementById('trackForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const inputVal = document.getElementById('trackInput').value.trim();
+            searchTrack(inputVal);
+        });
+
+        async function searchTrack(rentalIdRaw) {
+            document.getElementById('errorMsg').style.display = 'none';
+            document.getElementById('resultCard').classList.remove('active');
+            
+            // Clean ID (remove #BK- to match DB id)
+            let searchId = rentalIdRaw.replace('#BK-', '');
+            
+            try {
+                const numId = Number(searchId);
+                const doc = await db.collection('history').doc(numId.toString()).get();
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    renderResult(data);
+                } else {
+                    document.getElementById('errorMsg').style.display = 'block';
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                document.getElementById('errorMsg').style.display = 'block';
+                document.getElementById('errorMsg').textContent = "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์";
+            }
+        }
+
+        function renderResult(data) {
+            const couriers = [
+                { name: 'Flash Express', icon: '<i class="fa-solid fa-bolt"></i>', color: '#facc15' },
+                { name: 'J&T Express', icon: '<i class="fa-solid fa-truck-fast"></i>', color: '#ef4444' },
+                { name: 'Kerry Express', icon: '<i class="fa-solid fa-box"></i>', color: '#f97316' },
+                { name: 'ไปรษณีย์ไทย EMS', icon: '<i class="fa-solid fa-envelope"></i>', color: '#dc2626' }
+            ];
+            
+            const cIndex = data.id % couriers.length;
+            const courier = couriers[cIndex];
+            
+            document.getElementById('courierIcon').innerHTML = courier.icon;
+            document.getElementById('courierIcon').style.color = courier.color;
+            document.getElementById('courierIcon').style.background = courier.color + '20';
+            document.getElementById('courierName').textContent = courier.name;
+            document.getElementById('trackingNumber').textContent = 'TH' + data.id.toString().substring(0, 10);
+
+            document.getElementById('etaBadge').innerHTML = '<i class="fa-regular fa-clock"></i> คาดว่าจะถึงในอีก 1-2 วัน';
+            document.getElementById('paymentBadge').innerHTML = '<i class="fa-solid fa-check-circle"></i> ชำระเงินออนไลน์แล้ว (ค่าเช่า ' + (data.rentPrice || 0) + ' ฿)';
+            
+            const timelineContainer = document.getElementById('timelineContainer');
+            timelineContainer.innerHTML = '';
+            
+            const steps = [
+                { title: 'ผู้ปล่อยเช่าเตรียมจัดส่ง', desc: 'ผู้ปล่อยเช่ากำลังจัดเตรียมหนังสือของคุณ', icon: 'fa-box-open' },
+                { title: 'บริษัทขนส่งรับเข้าระบบ', desc: 'พัสดุถูกรับเข้าระบบขนส่งแล้ว', icon: 'fa-dolly' },
+                { title: 'อยู่ระหว่างจัดส่ง', desc: 'พัสดุกำลังเดินทางไปยังศูนย์กระจายสินค้าปลายทาง', icon: 'fa-truck' },
+                { title: 'จัดส่งสำเร็จ', desc: 'พัสดุถึงมือผู้รับเรียบร้อย', icon: 'fa-house-circle-check' }
+            ];
+
+            let activeStepIndex = 0;
+            if (data.status === 'ชำระเงินแล้ว') activeStepIndex = 0;
+            else if (data.status === 'กำลังจัดส่ง' || data.status === 'รอรับคืน') activeStepIndex = 2;
+            else if (data.status === 'คืนแล้ว') activeStepIndex = 3;
+            else activeStepIndex = 1;
+            
+            steps.forEach((step, index) => {
+                let stateClass = '';
+                if (index < activeStepIndex) stateClass = 'done';
+                else if (index === activeStepIndex) stateClass = 'active';
+                
+                let timeHtml = '';
+                if (index <= activeStepIndex) {
+                    const date = new Date(data.id + (index * 86400000));
+                    timeHtml = `<span class="time">${date.toLocaleDateString('th-TH')} ${date.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})}</span>`;
+                }
+
+                const itemHtml = `
+                    <div class="timeline-item ${stateClass}">
+                        <div class="timeline-icon">
+                            <i class="fa-solid ${step.icon}"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h4>${step.title}</h4>
+                            <p>${step.desc}</p>
+                            ${timeHtml}
+                        </div>
+                    </div>
+                `;
+                timelineContainer.innerHTML += itemHtml;
+            });
+            
+            document.getElementById('resultCard').classList.add('active');
+        }
+    </script>
+</body>
+</html>

@@ -694,6 +694,34 @@
 
     </div>
 
+    <!-- ================= PROFILE MODAL ================= -->
+
+    <div class="profile-modal hidden" id="profileModal" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center; z-index:9999; padding:20px;">
+        <div class="profile-modal-box" style="width:100%; max-width:450px; background:white; border-radius:28px; padding:35px; position:relative; text-align:center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+            <span class="close-profile" id="closeProfileModal" style="position:absolute; top:20px; right:25px; font-size:1.5rem; cursor:pointer; color:#64748b; transition:0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#64748b'">✕</span>
+
+            <h2 style="margin-bottom:25px; color:#1e3a8a; font-size: 1.5rem;">จัดการโปรไฟล์</h2>
+
+            <div class="avatar-upload" style="position:relative; width:120px; height:120px; margin:0 auto 25px;">
+                <img id="editProfileAvatar" src="" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:4px solid #eff6ff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                <label for="profileImageInput" style="position:absolute; bottom:0; right:0; background:#3b82f6; color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.2); transition: 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i class="fa-solid fa-camera"></i></label>
+                <input type="file" id="profileImageInput" accept="image/*" class="hidden" style="display:none;">
+            </div>
+
+            <div style="text-align:left; margin-bottom:15px;">
+                <label style="font-size:0.9rem; color:#64748b; font-weight:500;">ชื่อผู้ใช้ (แก้ไขไม่ได้)</label>
+                <input type="text" id="editProfileUsername" disabled style="width:100%; margin-top:8px; border:none; background:#f8fafc; padding:15px; border-radius:12px; font-family:'Kanit',sans-serif; color:#94a3b8; outline:none; border: 1px solid #e2e8f0;">
+            </div>
+
+            <div style="text-align:left; margin-bottom:25px;">
+                <label style="font-size:0.9rem; color:#64748b; font-weight:500;">เบอร์โทรศัพท์</label>
+                <input type="text" id="editProfilePhone" placeholder="กรอกเบอร์โทรศัพท์..." style="width:100%; margin-top:8px; border:none; background:#f8fafc; padding:15px; border-radius:12px; font-family:'Kanit',sans-serif; color:#1e293b; outline:none; border: 1px solid #e2e8f0; transition: 0.2s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+            </div>
+
+            <button id="saveProfileBtn" style="width:100%; border:none; padding:16px; border-radius:12px; background:#2563eb; color:white; font-size:1rem; font-weight:600; cursor:pointer; font-family:'Kanit',sans-serif; transition:0.2s; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);" onmouseover="this.style.backgroundColor='#1d4ed8'" onmouseout="this.style.backgroundColor='#2563eb'">บันทึกการเปลี่ยนแปลง</button>
+        </div>
+    </div>
+
     <!-- ================= RENT MODAL ================= -->
 
     <div class="rent-modal hidden" id="rentModal">
@@ -792,6 +820,19 @@
 
         </div>
 
+    </div>
+
+    <!-- ================= SLIP MODAL ================= -->
+
+    <div class="slip-modal hidden" id="slipModal" style="position:fixed; inset:0; background:rgba(0,0,0,0.7); display:flex; justify-content:center; align-items:center; z-index:9999; padding:20px;">
+        <div style="width:100%; max-width:400px; background:white; border-radius:16px; padding:20px; position:relative; text-align:center;">
+            <span class="close-slip" onclick="document.getElementById('slipModal').classList.add('hidden')" style="position:absolute; top:15px; right:20px; font-size:1.5rem; cursor:pointer; color:#64748b;">✕</span>
+            <h3 style="margin-bottom:15px; color:#1e3a8a;">หลักฐานการโอนเงิน</h3>
+            <div style="width:100%; max-height:60vh; overflow-y:auto; border:1px solid #e2e8f0; border-radius:12px; padding:10px;">
+                <img id="slipImagePreview" src="" style="width:100%; height:auto; border-radius:8px;">
+            </div>
+            <button onclick="document.getElementById('slipModal').classList.add('hidden')" style="margin-top:20px; width:100%; padding:12px; border-radius:8px; background:#e2e8f0; border:none; cursor:pointer; font-weight:600;">ปิดหน้าต่าง</button>
+        </div>
     </div>
 
     <!-- ================= PAYMENT MODAL ================= -->

@@ -164,9 +164,75 @@ function updateProfileUI() {
 
     }
 
+    if (typeof renderHistory === "function") renderHistory();
+
 }
 
 updateProfileUI();
+
+// ===============================
+// PROFILE MODAL LOGIC
+// ===============================
+
+if($("userProfile")) {
+    // Make avatar and name clickable
+    if($("userAvatar")) {
+        $("userAvatar").style.cursor = "pointer";
+        $("userAvatar").addEventListener("click", openProfileModal);
+    }
+    if($("profileName")) {
+        $("profileName").style.cursor = "pointer";
+        $("profileName").addEventListener("click", openProfileModal);
+    }
+}
+
+function openProfileModal() {
+    if (!currentUser) return;
+    $("profileModal").classList.remove("hidden");
+    $("editProfileAvatar").src = currentUser.avatar || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+    $("editProfileUsername").value = currentUser.username;
+    $("editProfilePhone").value = currentUser.phone || "";
+}
+
+if($("closeProfileModal")) $("closeProfileModal").addEventListener("click", () => {
+    $("profileModal").classList.add("hidden");
+});
+
+if($("profileImageInput")) $("profileImageInput").addEventListener("change", function() {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function() {
+        $("editProfileAvatar").src = reader.result;
+    };
+    reader.readAsDataURL(file);
+});
+
+if($("saveProfileBtn")) $("saveProfileBtn").addEventListener("click", () => {
+    if (!currentUser) return;
+    
+    const phone = $("editProfilePhone").value.trim();
+    if (!phone) {
+        alert("กรุณากรอกเบอร์โทรศัพท์");
+        return;
+    }
+    
+    currentUser.phone = phone;
+    currentUser.avatar = $("editProfileAvatar").src;
+    
+    saveCurrentUser();
+    
+    const uIndex = users.findIndex(u => u.username === currentUser.username);
+    if (uIndex !== -1) {
+        users[uIndex].phone = currentUser.phone;
+        users[uIndex].avatar = currentUser.avatar;
+        db.collection("users").doc(currentUser.username).set(users[uIndex]);
+    }
+    
+    updateProfileUI();
+    $("profileModal").classList.add("hidden");
+    alert("บันทึกข้อมูลส่วนตัวสำเร็จ");
+});
 
 // ===============================
 // OPEN / CLOSE MODAL
@@ -1151,82 +1217,60 @@ function startTimer() {
 
 if($("confirmPaymentBtn")) $("confirmPaymentBtn")
     .addEventListener("click", () => {
-
-        const slip =
-            $("paymentSlip")
-                .files[0];
-
+        const slip = $("paymentSlip").files[0];
         if (!slip) {
-
-            alert(
-                "กรุณาอัปโหลดสลิป"
-            );
-
+            alert("กรุณาอัปโหลดสลิป");
             return;
-
         }
 
-        const credit = Number(currentUser.depositCredit || 0);
-        const deposit = Number(selectedBook.deposit || 0);
-        const usedCredit = Math.min(deposit, credit);
-        
-        currentUser.depositCredit = credit - usedCredit;
-        saveCurrentUser();
-        
-        const uIndex = users.findIndex(u => u.username === currentUser.username);
-        if (uIndex !== -1) {
-            users[uIndex].depositCredit = currentUser.depositCredit;
-            saveUsers();
-            updateProfileUI();
-        }
+        const reader = new FileReader();
+        reader.onload = function() {
+            const slipImageBase64 = reader.result;
 
-        const rentData = {
+            const credit = Number(currentUser.depositCredit || 0);
+            const deposit = Number(selectedBook.deposit || 0);
+            const usedCredit = Math.min(deposit, credit);
+            
+            currentUser.depositCredit = credit - usedCredit;
+            saveCurrentUser();
+            
+            const uIndex = users.findIndex(u => u.username === currentUser.username);
+            if (uIndex !== -1) {
+                users[uIndex].depositCredit = currentUser.depositCredit;
+                saveUsers();
+                updateProfileUI();
+            }
 
-            id: Date.now(),
+            const rentData = {
+                id: Date.now(),
+                username: currentUser.username,
+                image: selectedBook.image,
+                bookTitle: selectedBook.title,
+                deposit: deposit,
+                rentPrice: currentRentPrice,
+                rentPackage: selectedRentPackage,
+                status: "ชำระเงินแล้ว",
+                slipImage: slipImageBase64
+            };
 
-            username:
-                currentUser.username,
+            history.unshift(rentData);
+            saveHistory();
+            
+            const bookIndex = books.findIndex(b => b.id === selectedBook.id);
+            if (bookIndex !== -1) {
+                books[bookIndex].status = "rented";
+                saveBooks();
+                renderBooks();
+            }
 
-            image:
-                selectedBook.image,
+            renderHistory();
+            clearInterval(countdown);
 
-            bookTitle:
-                selectedBook.title,
-
-            deposit: deposit,
-            rentPrice: currentRentPrice,
-            rentPackage: selectedRentPackage,
-
-            status:
-                "ชำระเงินแล้ว"
-
+            $("paymentModal").classList.add("hidden");
+            $("rentModal").classList.add("hidden");
+            alert("ชำระเงินสำเร็จ");
         };
-
-        history.unshift(rentData);
-
-        saveHistory();
-        
-        const bookIndex = books.findIndex(b => b.id === selectedBook.id);
-        if (bookIndex !== -1) {
-            books[bookIndex].status = "rented";
-            saveBooks();
-            renderBooks();
-        }
-
-        renderHistory();
-
-        clearInterval(countdown);
-
-        $("paymentModal")
-            .classList.add("hidden");
-
-        $("rentModal")
-            .classList.add("hidden");
-
-        alert(
-            "ชำระเงินสำเร็จ"
-        );
-
+        reader.readAsDataURL(slip);
     });
 
 // ===============================
@@ -1239,25 +1283,31 @@ function renderHistory() {
 
     $("historyGrid").innerHTML = "";
 
-    if (
-        history.length === 0
-    ) {
-
-        $("historyGrid").innerHTML =
-
-            `
+    if (!currentUser) {
+        $("historyGrid").innerHTML = `
         <div class="empty-box">
             <h2>
-                ยังไม่มีประวัติ
+                กรุณาเข้าสู่ระบบเพื่อดูประวัติการเช่า
             </h2>
         </div>
-    `;
-
+        `;
         return;
-
     }
 
-    history.forEach(item => {
+    const userHistory = history.filter(item => item.username === currentUser.username);
+
+    if (userHistory.length === 0) {
+        $("historyGrid").innerHTML = `
+        <div class="empty-box">
+            <h2>
+                คุณยังไม่มีประวัติการเช่า
+            </h2>
+        </div>
+        `;
+        return;
+    }
+
+    userHistory.forEach(item => {
 
         const card =
             document.createElement("div");
@@ -1282,6 +1332,11 @@ function renderHistory() {
 
         <div class="history-content">
 
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: #f8fafc; padding: 10px 14px; border-radius: 12px; border: 1px dashed #cbd5e1;">
+                <span style="font-weight: 700; color: #1e3a8a; font-size: 1rem;" id="rent-id-${item.id}">#BK-${item.id}</span>
+                <button onclick="copyToClipboard('#BK-${item.id}')" style="background: transparent; border: none; color: #3b82f6; cursor: pointer; font-size: 1.1rem; transition: 0.2s;" title="คัดลอกรหัส"><i class="fa-regular fa-copy"></i></button>
+            </div>
+
             <h3>
                 ${item.bookTitle}
             </h3>
@@ -1298,11 +1353,14 @@ function renderHistory() {
                 💰 มัดจำ ${item.deposit} | ค่าเช่า ${item.rentPrice || 0} ฿
             </p>
 
-            <p class="paid-status" style="margin-top: 4px;">
+            <p class="paid-status" style="margin-top: 4px; display: inline-block; padding: 4px 10px; background: #dcfce7; color: #166534; border-radius: 99px; font-size: 0.85rem; font-weight: 600;">
                 ${item.status}
             </p>
             
-            ${actionBtn}
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 15px;">
+                <a href="track.html?id=%23BK-${item.id}" target="_blank" style="width: 100%; text-align: center; text-decoration: none; background-color: #3b82f6; color: white; padding: 10px; border-radius: 12px; font-size: 0.9rem; font-weight: 600; transition: 0.2s; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2); display: block;"><i class="fa-solid fa-truck-fast"></i> ติดตามสถานะ</a>
+                ${actionBtn}
+            </div>
 
         </div>
 
@@ -1316,6 +1374,18 @@ function renderHistory() {
 }
 
 renderHistory();
+
+// ===============================
+// COPY TO CLIPBOARD
+// ===============================
+
+window.copyToClipboard = function(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        alert("คัดลอกรหัส " + text + " สำเร็จ!");
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+    });
+};
 
 window.returnBookByUser = function(historyId) {
     if (!confirm("ยืนยันการแจ้งคืนหนังสือ? ระบบจะส่งเรื่องให้แอดมินตรวจสอบ เมื่อแอดมินรับคืนแล้ว เครดิตมัดจำจะถูกเพิ่มเข้าบัญชีของคุณ")) return;
