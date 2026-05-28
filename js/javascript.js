@@ -73,29 +73,7 @@ db.collection("history").onSnapshot(snapshot => {
 // SAVE STORAGE
 // ===============================
 
-function saveUsers() {
-    users.forEach(user => {
-        db.collection("users").doc(user.username).set(user);
-    });
-}
-
-function saveBooks() {
-    books.forEach(book => {
-        db.collection("books").doc(book.id.toString()).set(book);
-    });
-}
-
-function saveReviews() {
-    reviews.forEach(review => {
-        db.collection("reviews").doc(review.id ? review.id.toString() : Date.now().toString()).set(review);
-    });
-}
-
-function saveHistory() {
-    history.forEach(item => {
-        db.collection("history").doc(item.id.toString()).set(item);
-    });
-}
+// The old loop-save functions have been removed to prevent massive rewrites.
 
 function saveCurrentUser() {
     localStorage.setItem(
@@ -109,20 +87,16 @@ function saveCurrentUser() {
 // ===============================
 
 if (!users.find(user => user.username === "admin")) {
-
-    users.push({
-
+    const adminUser = {
         id: 1,
         username: "admin",
         phone: "0000000000",
         password: "0007",
         role: "แอดมิน",
         avatar: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-
-    });
-
-    saveUsers();
-
+    };
+    users.push(adminUser);
+    db.collection("users").doc("admin").set(adminUser);
 }
 
 // ===============================
@@ -390,7 +364,7 @@ if($("registerBtn")) $("registerBtn")
 
         users.push(newUser);
 
-        saveUsers();
+        db.collection("users").doc(newUser.username).set(newUser);
 
         currentUser = newUser;
 
@@ -715,7 +689,7 @@ if($("bookForm")) $("bookForm")
 
         books.push(newBook);
 
-        saveBooks();
+        db.collection("books").doc(newBook.id.toString()).set(newBook);
 
         // ===============================
         // SEND TELEGRAM
@@ -1237,12 +1211,13 @@ if($("confirmPaymentBtn")) $("confirmPaymentBtn")
             const uIndex = users.findIndex(u => u.username === currentUser.username);
             if (uIndex !== -1) {
                 users[uIndex].depositCredit = currentUser.depositCredit;
-                saveUsers();
+                db.collection("users").doc(users[uIndex].username).set(users[uIndex]);
                 updateProfileUI();
             }
 
             const rentData = {
                 id: Date.now(),
+                bookId: selectedBook.id,
                 username: currentUser.username,
                 image: selectedBook.image,
                 bookTitle: selectedBook.title,
@@ -1254,12 +1229,12 @@ if($("confirmPaymentBtn")) $("confirmPaymentBtn")
             };
 
             history.unshift(rentData);
-            saveHistory();
+            db.collection("history").doc(rentData.id.toString()).set(rentData);
             
             const bookIndex = books.findIndex(b => b.id === selectedBook.id);
             if (bookIndex !== -1) {
                 books[bookIndex].status = "rented";
-                saveBooks();
+                db.collection("books").doc(books[bookIndex].id.toString()).set(books[bookIndex]);
                 renderBooks();
             }
 
@@ -1393,7 +1368,7 @@ window.returnBookByUser = function(historyId) {
     const hItem = history.find(h => h.id === historyId);
     if (hItem) {
         hItem.status = "รอรับคืน";
-        saveHistory();
+        db.collection("history").doc(hItem.id.toString()).set(hItem);
         
         renderHistory();
         alert("แจ้งคืนหนังสือสำเร็จ! กรุณารอแอดมินตรวจสอบการคืนหนังสือ");
@@ -1475,23 +1450,16 @@ if($("submitReviewBtn")) $("submitReviewBtn")
         }
 
         const review = {
-
-            user:
-                currentUser.username,
-
+            id: Date.now(),
+            user: currentUser.username,
             message,
-
-            stars:
-                selectedStars,
-
-            avatar:
-                currentUser.avatar
-
+            stars: selectedStars,
+            avatar: currentUser.avatar
         };
 
         reviews.unshift(review);
 
-        saveReviews();
+        db.collection("reviews").doc(review.id.toString()).set(review);
 
         renderReviews();
 

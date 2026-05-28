@@ -406,8 +406,9 @@
         <!-- Section: Books -->
             <div id="books" class="admin-section">
                 <div class="table-section">
-                <div class="section-header">
-                    <h2 class="section-title">จัดการข้อมูลหนังสือ</h2>
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 class="section-title" style="margin-bottom: 0;">จัดการข้อมูลหนังสือ</h2>
+                    <button onclick="openAdminBookModal()" class="btn" style="background-color: #3b82f6; padding: 8px 16px; font-weight: 500;"><i class="fas fa-plus"></i> เพิ่มหนังสือใหม่</button>
                 </div>
                 <table>
                     <thead>
@@ -430,8 +431,9 @@
             <!-- Section: Users -->
             <div id="users" class="admin-section">
                 <div class="table-section">
-                    <div class="section-header">
-                        <h2 class="section-title">จัดการสมาชิก</h2>
+                    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2 class="section-title" style="margin-bottom: 0;">จัดการสมาชิก</h2>
+                        <button onclick="openAdminUserModal()" class="btn" style="background-color: #3b82f6; padding: 8px 16px; font-weight: 500;"><i class="fas fa-user-plus"></i> เพิ่มสมาชิกใหม่</button>
                     </div>
                     <table>
                         <thead>
@@ -518,6 +520,100 @@
         </div>
     </main>
 
+    <!-- Admin Book Modal -->
+    <div id="adminBookModal" class="modal hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center;">
+        <div class="modal-box" style="background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 500px; position: relative; max-height: 90vh; overflow-y: auto;">
+            <span onclick="document.getElementById('adminBookModal').style.display='none'" style="position: absolute; right: 20px; top: 20px; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</span>
+            <h2 id="abModalTitle" style="color: #1e3a8a; margin-bottom: 20px;">เพิ่มหนังสือใหม่</h2>
+            <form id="adminBookForm">
+                <input type="hidden" id="abId">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">ชื่อหนังสือ <span style="color:red;">*</span></label>
+                    <input type="text" id="abTitle" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">ผู้ปล่อยเช่า (Username) <span style="color:red;">*</span></label>
+                    <input type="text" id="abOwner" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">หมวดหมู่</label>
+                    <select id="abCategory" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                        <option value="นิยาย">นิยาย</option>
+                        <option value="การ์ตูน">การ์ตูน</option>
+                        <option value="ความรู้">ความรู้</option>
+                        <option value="ธุรกิจ">ธุรกิจ</option>
+                        <option value="จิตวิทยา">จิตวิทยา</option>
+                        <option value="อื่นๆ">อื่นๆ</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <div style="flex: 1;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">ค่ามัดจำ (฿) <span style="color:red;">*</span></label>
+                        <input type="number" id="abDeposit" required min="0" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <div style="flex: 1;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">ราคาเช่า 1-7 วัน (฿)</label>
+                        <input type="number" id="abPrice7" min="0" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">ราคาเช่า 7-14 วัน (฿)</label>
+                        <input type="number" id="abPrice14" min="0" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                    </div>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">URL รูปภาพหน้าปก</label>
+                    <input type="url" id="abImage" placeholder="https://..." style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">สถานะหนังสือ</label>
+                    <select id="abStatus" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                        <option value="approved">พร้อมเช่า (approved)</option>
+                        <option value="pending">รอตรวจสอบ (pending)</option>
+                        <option value="rented">ถูกเช่าอยู่ (rented)</option>
+                    </select>
+                </div>
+                <button type="submit" style="width: 100%; background: #2563eb; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem;">บันทึกข้อมูล</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin User Modal -->
+    <div id="adminUserModal" class="modal hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center;">
+        <div class="modal-box" style="background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 500px; position: relative; max-height: 90vh; overflow-y: auto;">
+            <span onclick="document.getElementById('adminUserModal').style.display='none'" style="position: absolute; right: 20px; top: 20px; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</span>
+            <h2 id="auModalTitle" style="color: #1e3a8a; margin-bottom: 20px;">เพิ่มสมาชิกใหม่</h2>
+            <form id="adminUserForm">
+                <input type="hidden" id="auIsEdit" value="false">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">ชื่อผู้ใช้ (Username) <span style="color:red;">*</span></label>
+                    <input type="text" id="auUsername" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">รหัสผ่าน (Password) <span style="color:red;">*</span></label>
+                    <input type="text" id="auPassword" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">เบอร์โทรศัพท์ <span style="color:red;">*</span></label>
+                    <input type="tel" id="auPhone" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">เครดิตมัดจำ (Deposit Credit)</label>
+                    <input type="number" id="auDeposit" min="0" value="0" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">สิทธิ์การใช้งาน (Role)</label>
+                    <select id="auRole" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                        <option value="ผู้ใช้งาน">ผู้ใช้งาน</option>
+                        <option value="แอดมิน">แอดมิน</option>
+                    </select>
+                </div>
+                <button type="submit" style="width: 100%; background: #2563eb; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem;">บันทึกข้อมูล</button>
+            </form>
+        </div>
+    </div>
+
     <!-- ================= FIREBASE ================= -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -569,18 +665,7 @@
             renderDashboard();
         });
 
-        // Save Function
-        function saveBooks() {
-            books.forEach(book => {
-                db.collection("books").doc(book.id.toString()).set(book);
-            });
-        }
-
-        function saveUsers() {
-            users.forEach(user => {
-                db.collection("users").doc(user.username).set(user);
-            });
-        }
+        // Save functions removed to prevent loop overwrites
 
         // Render Dashboard
         function renderDashboard() {
@@ -612,33 +697,38 @@
                 let statusHtml = '';
                 let actionHtml = '';
 
+                // Add edit button as base action
+                const editBtn = `<button onclick="editAdminBook(${book.id})" class="btn" style="background-color: #f59e0b; padding: 6px 12px; font-size: 0.75rem; margin-right: 4px; margin-bottom: 4px;">แก้ไข</button>`;
+
                 if (book.status === 'pending') {
                     statusHtml = '<span class="status orange" style="background-color: #ffedd5; color: #ea580c;">รอตรวจสอบ</span>';
-                    actionHtml = `
-                        <button onclick="approveBook(${book.id})" class="btn" style="background-color: #16a34a; padding: 6px 12px; margin-right: 4px; font-size: 0.75rem;">อนุมัติ</button>
-                        <button onclick="rejectBook(${book.id})" class="btn" style="background-color: #dc2626; padding: 6px 12px; font-size: 0.75rem;">ปฏิเสธ</button>
+                    actionHtml = editBtn + `
+                        <button onclick="approveBook(${book.id})" class="btn" style="background-color: #16a34a; padding: 6px 12px; margin-right: 4px; margin-bottom: 4px; font-size: 0.75rem;">อนุมัติ</button>
+                        <button onclick="rejectBook(${book.id})" class="btn" style="background-color: #dc2626; padding: 6px 12px; margin-bottom: 4px; font-size: 0.75rem;">ปฏิเสธ</button>
                     `;
                 } else if (book.status === 'approved') {
                     statusHtml = '<span class="status active">พร้อมเช่า</span>';
-                    actionHtml = `
-                        <button onclick="deleteBook(${book.id})" class="btn" style="background-color: #dc2626; padding: 6px 12px; font-size: 0.75rem;">ลบ</button>
+                    actionHtml = editBtn + `
+                        <button onclick="deleteBook(${book.id})" class="btn" style="background-color: #dc2626; padding: 6px 12px; margin-bottom: 4px; font-size: 0.75rem;">ลบ</button>
                     `;
                 } else if (book.status === 'rented') {
-                    const pendingReturn = historyData.find(h => h.bookTitle === book.title && h.status === 'รอรับคืน');
+                    const pendingReturn = historyData.find(h => (h.bookId === book.id || (!h.bookId && h.bookTitle === book.title)) && h.status === 'รอรับคืน');
                     if (pendingReturn) {
                         statusHtml = `<span class="status" style="background-color: #ffedd5; color: #ea580c;">รอแอดมินรับคืน</span>`;
-                        actionHtml = `
-                            <button onclick="returnBook(${book.id})" class="btn" style="background-color: #16a34a; padding: 6px 12px; font-size: 0.75rem;">ยืนยันรับคืน</button>
+                        actionHtml = editBtn + `
+                            <button onclick="returnBook(${book.id}, ${pendingReturn.id})" class="btn" style="background-color: #16a34a; padding: 6px 12px; margin-bottom: 4px; font-size: 0.75rem;">ยืนยันรับคืน</button>
                         `;
                     } else {
+                        const activeRent = historyData.find(h => (h.bookId === book.id || (!h.bookId && h.bookTitle === book.title)) && h.status === 'ชำระเงินแล้ว');
+                        const hId = activeRent ? activeRent.id : 'null';
                         statusHtml = `<span class="status returned" style="background-color: #fef08a; color: #854d0e;">ถูกเช่าอยู่</span>`;
-                        actionHtml = `
-                            <button onclick="returnBook(${book.id})" class="btn" style="background-color: #3b82f6; padding: 6px 12px; font-size: 0.75rem;">รับคืน (บังคับ)</button>
+                        actionHtml = editBtn + `
+                            <button onclick="returnBook(${book.id}, ${hId})" class="btn" style="background-color: #3b82f6; padding: 6px 12px; margin-bottom: 4px; font-size: 0.75rem;">รับคืน (บังคับ)</button>
                         `;
                     }
                 } else {
                     statusHtml = `<span class="status returned">${book.status}</span>`;
-                    actionHtml = '-';
+                    actionHtml = editBtn;
                 }
 
                 tr.innerHTML = `
@@ -675,8 +765,9 @@
                             <td style="font-weight: 500;">${user.username}</td>
                             <td><span class="status" style="${roleStyle}">${user.role}</span></td>
                             <td>
-                                <button onclick="toggleUserRole('${user.username}')" class="btn" style="background-color: #3b82f6; padding: 6px 12px; font-size: 0.75rem; margin-right: 4px;">${toggleText}</button>
-                                <button onclick="deleteUser('${user.username}')" class="btn" style="background-color: #dc2626; padding: 6px 12px; font-size: 0.75rem;">ลบ</button>
+                                <button onclick="editAdminUser('${user.username}')" class="btn" style="background-color: #f59e0b; padding: 6px 12px; font-size: 0.75rem; margin-right: 4px; margin-bottom: 4px;">แก้ไข</button>
+                                <button onclick="toggleUserRole('${user.username}')" class="btn" style="background-color: #3b82f6; padding: 6px 12px; font-size: 0.75rem; margin-right: 4px; margin-bottom: 4px;">${toggleText}</button>
+                                <button onclick="deleteUser('${user.username}')" class="btn" style="background-color: #dc2626; padding: 6px 12px; font-size: 0.75rem; margin-bottom: 4px;">ลบ</button>
                             </td>
                         `;
                         userBody.appendChild(tr);
@@ -700,8 +791,10 @@
                             <td>${historyItem.deposit} ฿</td>
                             <td><span class="status returned">${historyItem.status}</span></td>
                             <td>
-                                <button onclick="editHistory(${historyItem.id})" class="btn" style="background-color: #f59e0b; padding: 6px 12px; font-size: 0.75rem; margin-right: 4px;">แก้ไขสถานะ</button>
-                                <button onclick="deleteHistory(${historyItem.id})" class="btn" style="background-color: #dc2626; padding: 6px 12px; font-size: 0.75rem;">ลบ</button>
+                                <button onclick="updateTracking(${historyItem.id})" class="btn" style="background-color: #3b82f6; padding: 6px 12px; font-size: 0.75rem; margin-right: 4px; margin-bottom: 4px;"><i class="fas fa-truck"></i> อัปเดตขนส่ง</button>
+                                <a href="track.html?id=%23BK-${historyItem.id}" target="_blank" class="btn" style="background-color: #10b981; padding: 6px 12px; font-size: 0.75rem; margin-right: 4px; margin-bottom: 4px; display: inline-block; text-decoration: none;"><i class="fas fa-search"></i> ติดตาม</a><br>
+                                <button onclick="editHistory(${historyItem.id})" class="btn" style="background-color: #f59e0b; padding: 6px 12px; font-size: 0.75rem; margin-right: 4px;"><i class="fas fa-edit"></i> แก้ไขสถานะ</button>
+                                <button onclick="deleteHistory(${historyItem.id})" class="btn" style="background-color: #dc2626; padding: 6px 12px; font-size: 0.75rem;"><i class="fas fa-trash"></i> ลบ</button>
                             </td>
                         `;
                         historyBody.appendChild(tr);
@@ -824,6 +917,132 @@
             }
         };
 
+        // ===============================
+        // ADMIN MODALS LOGIC
+        // ===============================
+        
+        window.openAdminBookModal = function() {
+            document.getElementById('abModalTitle').textContent = 'เพิ่มหนังสือใหม่';
+            document.getElementById('adminBookForm').reset();
+            document.getElementById('abId').value = '';
+            document.getElementById('abStatus').value = 'approved';
+            document.getElementById('adminBookModal').style.display = 'flex';
+        };
+
+        window.editAdminBook = function(id) {
+            const book = books.find(b => b.id === id);
+            if (book) {
+                document.getElementById('abModalTitle').textContent = 'แก้ไขหนังสือ';
+                document.getElementById('abId').value = book.id;
+                document.getElementById('abTitle').value = book.title;
+                document.getElementById('abOwner').value = book.owner || '';
+                document.getElementById('abCategory').value = book.category;
+                document.getElementById('abDeposit').value = book.deposit;
+                document.getElementById('abPrice7').value = book.price7 || 0;
+                document.getElementById('abPrice14').value = book.price14 || 0;
+                document.getElementById('abImage').value = book.image;
+                document.getElementById('abStatus').value = book.status;
+                document.getElementById('adminBookModal').style.display = 'flex';
+            }
+        };
+
+        document.getElementById('adminBookForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const idVal = document.getElementById('abId').value;
+            const bookData = {
+                id: idVal ? Number(idVal) : Date.now(),
+                title: document.getElementById('abTitle').value.trim(),
+                owner: document.getElementById('abOwner').value.trim(),
+                category: document.getElementById('abCategory').value,
+                deposit: Number(document.getElementById('abDeposit').value),
+                price7: Number(document.getElementById('abPrice7').value) || 0,
+                price14: Number(document.getElementById('abPrice14').value) || 0,
+                image: document.getElementById('abImage').value.trim() || 'https://via.placeholder.com/150',
+                status: document.getElementById('abStatus').value
+            };
+            db.collection("books").doc(bookData.id.toString()).set(bookData)
+                .then(() => {
+                    document.getElementById('adminBookModal').style.display = 'none';
+                    alert(idVal ? 'แก้ไขข้อมูลหนังสือสำเร็จ' : 'เพิ่มหนังสือใหม่สำเร็จ');
+                })
+                .catch(err => alert("Error: " + err));
+        });
+
+        window.openAdminUserModal = function() {
+            document.getElementById('auModalTitle').textContent = 'เพิ่มสมาชิกใหม่';
+            document.getElementById('adminUserForm').reset();
+            document.getElementById('auIsEdit').value = 'false';
+            document.getElementById('auUsername').readOnly = false;
+            document.getElementById('adminUserModal').style.display = 'flex';
+        };
+
+        window.editAdminUser = function(username) {
+            const user = users.find(u => u.username === username);
+            if (user) {
+                document.getElementById('auModalTitle').textContent = 'แก้ไขสมาชิก';
+                document.getElementById('auIsEdit').value = 'true';
+                document.getElementById('auUsername').value = user.username;
+                document.getElementById('auUsername').readOnly = true; // Cannot edit username
+                document.getElementById('auPassword').value = user.password;
+                document.getElementById('auPhone').value = user.phone;
+                document.getElementById('auDeposit').value = user.depositCredit || 0;
+                document.getElementById('auRole').value = user.role;
+                document.getElementById('adminUserModal').style.display = 'flex';
+            }
+        };
+
+        document.getElementById('adminUserForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const isEdit = document.getElementById('auIsEdit').value === 'true';
+            const username = document.getElementById('auUsername').value.trim();
+            
+            if (!isEdit && users.find(u => u.username === username)) {
+                alert("ชื่อผู้ใช้นี้ถูกใช้งานแล้ว");
+                return;
+            }
+
+            const userData = {
+                username: username,
+                password: document.getElementById('auPassword').value.trim(),
+                phone: document.getElementById('auPhone').value.trim(),
+                depositCredit: Number(document.getElementById('auDeposit').value) || 0,
+                role: document.getElementById('auRole').value,
+                avatar: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+            };
+
+            if (isEdit) {
+                const oldUser = users.find(u => u.username === username);
+                if (oldUser) {
+                    userData.id = oldUser.id;
+                    userData.avatar = oldUser.avatar;
+                }
+            } else {
+                userData.id = Date.now();
+            }
+
+            db.collection("users").doc(username).set(userData)
+                .then(() => {
+                    document.getElementById('adminUserModal').style.display = 'none';
+                    alert(isEdit ? 'แก้ไขข้อมูลสมาชิกสำเร็จ' : 'เพิ่มสมาชิกใหม่สำเร็จ');
+                })
+                .catch(err => alert("Error: " + err));
+        });
+
+        window.updateTracking = function(id) {
+            const hItem = historyData.find(h => h.id === id);
+            if (hItem) {
+                const courier = prompt("บริษัทขนส่ง (เช่น Flash, J&T, EMS):", hItem.courier || "");
+                if (courier !== null) {
+                    const trackingNo = prompt("เลขพัสดุ:", hItem.trackingNo || "");
+                    if (trackingNo !== null) {
+                        hItem.courier = courier.trim();
+                        hItem.trackingNo = trackingNo.trim();
+                        db.collection("history").doc(hItem.id.toString()).set(hItem);
+                    }
+                }
+            }
+        };
+
         window.editHistory = function(id) {
             const hItem = historyData.find(h => h.id === id);
             if (hItem) {
@@ -890,13 +1109,19 @@
             });
         });
 
-        window.returnBook = function(id) {
+        window.returnBook = function(bookId, historyId) {
             if(confirm("ยืนยันการรับคืนหนังสือเล่มนี้ (สถานะจะกลับเป็นพร้อมเช่า และเครดิตมัดจำจะถูกคืนให้ผู้เช่า)?")) {
-                const book = books.find(b => b.id === id);
+                const book = books.find(b => b.id === bookId);
                 if(book) {
                     book.status = 'approved';
                     
-                    const hItem = historyData.find(h => h.bookTitle === book.title && (h.status === "ชำระเงินแล้ว" || h.status === "รอรับคืน"));
+                    let hItem = null;
+                    if (historyId && historyId !== null) {
+                        hItem = historyData.find(h => h.id === historyId);
+                    } else {
+                        hItem = historyData.find(h => h.bookTitle === book.title && (h.status === "ชำระเงินแล้ว" || h.status === "รอรับคืน"));
+                    }
+                    
                     if (hItem) {
                         hItem.status = "คืนแล้ว";
                         db.collection("history").doc(hItem.id.toString()).set(hItem);
@@ -907,7 +1132,7 @@
                             db.collection("users").doc(users[userIndex].username).set(users[userIndex]);
                         }
                     }
-                    saveBooks();
+                    db.collection("books").doc(book.id.toString()).set(book);
                 }
                 renderDashboard();
             }

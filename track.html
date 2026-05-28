@@ -182,11 +182,14 @@
             const cIndex = data.id % couriers.length;
             const courier = couriers[cIndex];
             
+            let courierName = data.courier || courier.name;
+            let trackingNo = data.trackingNo || ('TH' + data.id.toString().substring(0, 10));
+
             document.getElementById('courierIcon').innerHTML = courier.icon;
             document.getElementById('courierIcon').style.color = courier.color;
             document.getElementById('courierIcon').style.background = courier.color + '20';
-            document.getElementById('courierName').textContent = courier.name;
-            document.getElementById('trackingNumber').textContent = 'TH' + data.id.toString().substring(0, 10);
+            document.getElementById('courierName').textContent = courierName;
+            document.getElementById('trackingNumber').textContent = trackingNo;
 
             document.getElementById('etaBadge').innerHTML = '<i class="fa-regular fa-clock"></i> คาดว่าจะถึงในอีก 1-2 วัน';
             document.getElementById('paymentBadge').innerHTML = '<i class="fa-solid fa-check-circle"></i> ชำระเงินออนไลน์แล้ว (ค่าเช่า ' + (data.rentPrice || 0) + ' ฿)';

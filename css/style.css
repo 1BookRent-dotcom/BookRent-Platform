@@ -69,8 +69,7 @@ body{
 ========================= */
 
 .navbar{
-    position:sticky;
-    top:0;
+    position:relative;
     z-index:999;
     background:white;
     display:flex;
@@ -694,6 +693,8 @@ body{
     border-radius:28px;
     padding:35px;
     position:relative;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 .terms-content-box{
@@ -802,6 +803,8 @@ body{
     border-radius:28px;
     padding:35px;
     position:relative;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 .rent-grid{
